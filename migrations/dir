@@ -1,0 +1,19 @@
+I want you to write a mermaid structure for me and also an explanation of each directory
+I'm going to include your stuff in the readme of the project
+adapter: clients of cache like Redis or broker exist here
+cmd: all commands and entry points of the application.
+config: config files
+internal: the main logic of the application exists here
+ - app: files to serve the application
+- domain: entity structs exist here
+- modules: application may have som modules
+-- some module: 
+---delivery
+---repository: implement base_repository_contract.go
+---usecase: implement base_service.go
+---base_repository_contract.go : repository interface
+---base_service.go: service interface
+migrations: migration files
+models: models of database
+pb:
+pkg: all utils which may be used

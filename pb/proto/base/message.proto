@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package haf80.api.base;
+
+option go_package = "micro/api/pb/base";
+
+message SampleRequest {
+    string userID = 1;
+    int32 data = 2;
+}
+
+message SampleResponse {
+    string data = 1;
+}

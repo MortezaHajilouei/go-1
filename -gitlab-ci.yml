@@ -1,0 +1,79 @@
+stages:
+    - test
+    - build
+    - dockerize
+    - deploy
+
+format:
+    tags: 
+        - golang-builder
+    stage: test
+    before_script:
+        - git submodule init
+        - git submodule update
+        - make proto
+    script:
+        - go mod vendor
+        - go fmt $(go list ./... | grep -v /vendor/)
+        - go vet $(go list ./... | grep -v /vendor/)
+        - go test -race $(go list ./... | grep -v /vendor/)
+    allow_failure: true
+    when: manual
+    only:
+        - dev
+        - master
+        - ci-test
+
+compile:
+    tags: 
+        - golang-builder
+    stage: build
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+        SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+        GO111MODULE: ""
+        CGO_ENABLED: 0
+    before_script:
+        - git submodule init
+        - git submodule update
+        - make proto
+    after_script:
+        - >
+            sonar-scanner
+            -Dsonar.projectKey=$CI_PROJECT_TITLE
+            -Dsonar.sources=.
+            -Dsonar.host.url=$SONAR_URL
+            -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA
+            -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME
+            -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.analysis.mode=publish
+    script:
+        - go mod vendor
+        - go build -tags netgo -ldflags "-extldflags '-static'" -o application
+    artifacts:
+        paths:
+        - application
+        - api/swagger
+    cache:
+        key: "${CI_JOB_NAME}"
+        paths:
+            - .sonar/cache
+    only:
+        - dev
+        - master
+        - ci-test
+
+docker_build:
+    stage: dockerize
+    needs:
+        - compile
+    script:
+        - docker build -t p-repo.ipaam.ir/$CI_PROJECT_TITLE:$CI_COMMIT_SHORT_SHA .
+        - docker login p-repo.ipaam.ir -u runner -p $DOCKER_PASS
+        - docker push p-repo.ipaam.ir/$CI_PROJECT_TITLE:$CI_COMMIT_SHORT_SHA
+    when: manual
+    only:
+        - dev
+        - master
+        - ci-test
+

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package haf80.api.base;
+
+option go_package = "micro/api/pb/base";
+
+import "google/api/annotations.proto";
+import "base/message.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  base_path: "/base";
+};
+
+service SampleAPI {
+  rpc SampleEndpoint (SampleRequest) returns (SampleResponse) {
+    option (google.api.http) = {
+      post: "/v1/sample/{userID}"
+      body: "*"
+    };
+  }
+}
